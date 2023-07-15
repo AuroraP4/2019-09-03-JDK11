@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import it.polito.tdp.food.model.Arco;
 import it.polito.tdp.food.model.Condiment;
 import it.polito.tdp.food.model.Food;
 import it.polito.tdp.food.model.Portion;
@@ -109,6 +111,94 @@ public class FoodDao {
 
 	}
 	
-	
+	public List<String> listAllTipiDiPorzione(){
+		String sql = "SELECT DISTINCT p.portion_display_name "
+				+ "FROM portion p "
+				+ "ORDER BY p.portion_display_name ASC " ;
+		try {
+			List<String> list = new ArrayList<>() ;
+			Connection conn = DBConnect.getConnection() ;
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			ResultSet res = st.executeQuery() ;
+			
+			while(res.next()) {
+				try {
+					list.add(res.getString("portion_display_name"));
+				} catch (Throwable t) {
+					t.printStackTrace(); }
+			}
+			
+			conn.close();
+			return list ;
 
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null ;
+		}
+
+	}
+	
+	public List<String> listPorzioniByCalories(int C) {
+		String sql = "SELECT DISTINCT portion_display_name " + 
+				"FROM `portion` " + 
+				"WHERE calories<? " + 
+				"ORDER BY portion_display_name" ;
+		
+		try {
+			Connection conn = DBConnect.getConnection() ;
+
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			
+			st.setInt(1, C);
+			
+			ResultSet res = st.executeQuery() ;
+			
+			List<String> result = new ArrayList<>() ;
+			
+			while(res.next()) {
+				result.add( res.getString("portion_display_name"));
+			}
+			
+			conn.close();
+			return result ;
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null ;
+		}
+		
+	}
+	
+	public List<Arco> getArchi() {
+		String sql = "SELECT P1.portion_display_name AS NAME1, P2.portion_display_name AS NAME2, COUNT(DISTINCT P1.food_code) AS CNT " + 
+				"FROM `portion` P1, `portion` P2 " + 
+				"WHERE P1.food_code=P2.food_code " + 
+				"AND P1.portion_id<>P2.portion_id " + 
+				"GROUP BY P1.portion_display_name, P2.portion_display_name" ;
+		
+		try {
+			Connection conn = DBConnect.getConnection() ;
+
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			
+			ResultSet res = st.executeQuery() ;
+			
+			List<Arco> result = new ArrayList<>() ;
+			while(res.next()) {
+				result.add( new Arco(
+						res.getString("NAME1"), 
+						res.getString("NAME2"), 
+						res.getInt("CNT"))) ;
+			}
+			
+			conn.close() ;
+			return result ;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null; 
+		}
+	}
+	
 }
